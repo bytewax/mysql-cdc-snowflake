@@ -1,0 +1,2 @@
+bytewax==0.18
+snowflake_connector
