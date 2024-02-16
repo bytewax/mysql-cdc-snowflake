@@ -32,6 +32,23 @@ pip install -r requirements.txt
 
 ## Configuration
 
+before getting started, we need to run mysql.
+
+`docker compose up -d`
+
+Now we can exec into the container and create the right privileges.
+
+```export MYSQL_USER=root
+export MYSQL_PASSWORD=example```
+
+`docker exec -it db mysql -u$MYSQL_USER -p$MYSQL_PASSWORD`
+
+```
+CREATE USER 'replicator'@'%' IDENTIFIED BY 'replicationpassword';
+GRANT REPLICATION SLAVE ON *.* TO 'replicator'@'%';
+FLUSH PRIVILEGES;
+```
+
 Before running the dataflow, you need to configure the Snowflake connection parameters. Set the following environment variables with your Snowflake account details:
 
 ```bash

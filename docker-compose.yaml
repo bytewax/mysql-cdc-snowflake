@@ -1,0 +1,21 @@
+version: '3.6'
+
+services:
+
+  db:
+    image: mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: example
+      MYSQL_DATABASE: bytewax
+    command: --server-id=1 --log-bin=mysql-bin --binlog-format=ROW
+    volumes: 
+          - ./init:/docker-entrypoint-initdb.d
+    ports:
+      - "3306:3306"
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8080:8080

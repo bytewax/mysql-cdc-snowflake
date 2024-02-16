@@ -1,2 +1,4 @@
-bytewax==0.18
-snowflake_connector
+bytewax==0.18.1
+snowflake_connector==3.6.0
+PyMySQL==1.1.0
+mysql-replication==1.0.6
