@@ -18,10 +18,10 @@ def convert_event_to_dict(schema, table, event):
         elif isinstance(event, UpdateRowsEvent):
             op_type = 'u'  # Assuming 'u' stands for update
             before_values = row.get("before_values", None)
-            after_values = row.get("after_values", None).values()
+            after_values = row.get("after_values", None)
         elif isinstance(event, DeleteRowsEvent):
             op_type = 'd'  # Assuming 'd' stands for delete
-            before_values = row.get("values", None).values()
+            before_values = row.get("values", None)
             after_values = None
         else:
             return None  # Non-row events are not handled
@@ -34,8 +34,6 @@ def convert_event_to_dict(schema, table, event):
                 "transaction": None,  # You may need to handle transaction logic based on your needs
         }))
     return events
-
-    
 
 
 class MySQLBinLogSource(FixedPartitionedSource):
@@ -58,12 +56,14 @@ class MySQLBinLogPartition(StatefulSourcePartition):
             resume_stream=True
         )
 
-    def next_batch(self, sched: datetime | None) -> Iterable[tuple]:
+    def next_batch(self) -> Iterable[tuple]:
         binlogevent = self.stream.fetchone()
+        if binlogevent is None:
+            return []  # or return an appropriate value indicating no events
         schema = binlogevent.schema
         table = binlogevent.table
         batch = convert_event_to_dict(schema, table, binlogevent)
-        return (batch)
+        return [batch]
     
     def snapshot(self) -> None:
         return None

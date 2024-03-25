@@ -11,18 +11,18 @@ def create_temp_table(table_data, destination_table, stream_table_schema):
     columns__types = ", ".join(
         [" ".join(key__value) for key__value in stream_table_schema.items()]
     )
-    query_string = f"""CREATE OR REPLACE TABLE temp_{destination_table}_stream ({columns__types});"""
+    query_string = f"""CREATE OR REPLACE TABLE temp_{destination_table}_stream ({columns__types});\n"""
 
     columns = ", ".join(stream_table_schema.keys())
     values = ", ".join(
         [
-            "(" + ", ".join([str(row[x]) for x in stream_table_schema.keys()]) + ")"
+            "(" + ", ".join([f"'{str(row[x])}'" for x in stream_table_schema.keys() ]) + ")"
             for row in table_data
         ]
     )
     insert_string = f"""INSERT INTO temp_{destination_table}_stream ({columns})
                     VALUES {values};""".replace(
-        "None", "NULL"
+        "'None'", "NULL"
     )
     return (query_string, insert_string)
 
@@ -81,8 +81,8 @@ class SnowflakeSink(DynamicSink):
             "METADATA$ACTION": "VARCHAR",
         }
 
-    def build(self, worker_index, worker_count):
-        return SnowflakePartition(
+    def build(self, _step_id, _worker_index, _worker_count):
+        return _SnowflakePartition(
             self.user,
             self.password,
             self.account,
@@ -96,7 +96,7 @@ class SnowflakeSink(DynamicSink):
         )
 
 
-class SnowflakePartition(StatelessSinkPartition):
+class _SnowflakePartition(StatelessSinkPartition):
     def __init__(
         self,
         user,
@@ -144,20 +144,20 @@ class SnowflakePartition(StatelessSinkPartition):
                 # create event
                 stream_mods = {
                     "METADATA$ISUPDATE": False,
-                    "METADATA$ACTION": "'INSERT'",
+                    "METADATA$ACTION": "INSERT",
                 }
                 table_data[event["after"][self.primary_key]] = (
                     event["after"] | stream_mods
                 )
             elif event["op"] == "u":
                 # update event
-                stream_mods = {"METADATA$ISUPDATE": True, "METADATA$ACTION": "'INSERT'"}
+                stream_mods = {"METADATA$ISUPDATE": True, "METADATA$ACTION": "INSERT"}
                 table_data[event["after"][self.primary_key]] = (
                     event["after"] | stream_mods
                 )
             elif event["op"] == "d":
                 # delete event
-                stream_mods = {"METADATA$ISUPDATE": True, "METADATA$ACTION": "'DELETE'"}
+                stream_mods = {"METADATA$ISUPDATE": True, "METADATA$ACTION": "DELETE"}
                 table_data[event["before"][self.primary_key]] = (
                     event["before"] | stream_mods
                 )
@@ -166,6 +166,7 @@ class SnowflakePartition(StatelessSinkPartition):
         query_string, insert_string = create_temp_table(
             table_data.values(), self.destination_table, self.stream_table_schema
         )
+        print(query_string, insert_string)
         self.conn.cursor().execute(query_string)
         self.conn.cursor().execute(insert_string)
 
