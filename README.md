@@ -1,4 +1,4 @@
-# Bytewax Dataflow for Snowflake Database Replication
+# Bytewax Dataflow for MySQL <> Snowflake Database Replication
 
 This repository contains a Bytewax dataflow example that demonstrates how to replicate a MySQL database into Snowflake. It's designed to help you understand how to capture and process change data capture (CDC) streams and apply them to a Snowflake database using Bytewax.
 
